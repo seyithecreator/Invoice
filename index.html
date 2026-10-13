@@ -36,10 +36,10 @@ input:focus,select:focus,textarea:focus,button:focus-visible{outline:2px solid v
 .bar{display:flex;gap:8px;flex-wrap:wrap;position:sticky;bottom:0;padding:10px 0;background:linear-gradient(transparent,var(--bg) 30%)}
 .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:10px;font-weight:600;z-index:9;display:none}
 /* sheet */
-.sheet{background:#fff;color:#2b2b2b;border-radius:6px;box-shadow:0 8px 30px rgba(0,0,0,.14);padding:40px 38px;font:13px/1.5 "Helvetica Neue",Arial,sans-serif;min-height:640px;width:680px;transform-origin:top left}
-#sw{overflow:hidden;border-radius:6px;border:1px solid var(--line)}
+.sheet{background:#fff;color:#2b2b2b;border-radius:6px;box-shadow:0 8px 30px rgba(0,0,0,.14);padding:40px 38px;font:13px/1.5 "Helvetica Neue",Arial,sans-serif;min-height:640px}
+#sw{container-type:inline-size}
 [hidden]{display:none!important}
-.sheet .in{min-width:520px}.sheet .g{color:#888}
+.sheet .g{color:#888}
 .sh-top,.sh-mid{display:flex;justify-content:space-between;gap:20px}
 .sh-title{text-align:right;font-size:40px;font-weight:300;line-height:1;color:#3a3a3a}.sh-title small{display:block;font-size:15px;color:#888;margin-top:8px}
 .logo{max-height:56px;max-width:180px;display:block;margin-bottom:8px}
@@ -51,6 +51,16 @@ input:focus,select:focus,textarea:focus,button:focus-visible{outline:2px solid v
 .tot{margin:26px 0 0 auto;width:52%}.tot div{display:flex;justify-content:space-between;padding:4px 10px}.tot .g{color:#888}.tot .b{font-weight:700;border-top:1px solid #ddd;margin-top:4px;padding-top:8px}
 .note{margin-top:26px}.note .g{margin-bottom:2px}
 .sheet{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+@container (max-width:560px){
+.sheet{padding:22px 16px;min-height:0}
+.sh-top{flex-direction:column-reverse;gap:14px}.sh-title{text-align:left;font-size:34px}.sh-title small{margin-top:4px}
+.sh-mid{flex-direction:column;margin-top:22px}.meta{width:100%}
+.sheet table,.sheet tbody{display:block}.sheet tr:first-child{display:none}
+.sheet tr{display:block;padding:10px 0;border-bottom:1px solid #e8e8e8}
+.sheet td{display:flex;justify-content:space-between;gap:12px;padding:1px 0;text-align:right}
+.sheet td:first-child{display:block;text-align:left;margin-bottom:3px}
+.sheet td[data-l]::before{content:attr(data-l);color:#888;text-align:left}
+.tot{width:100%}}
 /* tracker */
 .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:14px}
 .stat b{display:block;font-size:22px;letter-spacing:-.02em}.stat span{color:var(--mut);font-size:13px}
@@ -60,6 +70,7 @@ input:focus,select:focus,textarea:focus,button:focus-visible{outline:2px solid v
 .ra{display:flex;gap:8px}.ra .btn{flex:1;padding:8px}
 .pill{padding:3px 8px;border-radius:99px;font-size:12px;font-weight:700;background:var(--accb);color:var(--acc)}.pill.overdue{background:#fde4e1;color:#b3261e}.pill.draft{background:var(--bg);color:var(--mut)}
 .hint{font-size:12.5px;color:var(--mut);margin-bottom:12px}
+.warn{color:#e5604f;font-size:12.5px;margin-top:6px}.warn .btn{margin-top:4px}
 .empty{padding:40px 12px;text-align:center;color:var(--mut)}
 .seg{display:none;gap:4px;background:var(--card);border:1px solid var(--line);padding:4px;border-radius:10px;margin-bottom:12px}
 .seg button{flex:1;border:0;background:none;color:var(--mut);font:inherit;font-weight:600;padding:10px;border-radius:7px;cursor:pointer}.seg button.on{background:var(--accb);color:var(--acc)}
@@ -79,7 +90,7 @@ nav button{flex:1;padding:12px 8px}main{padding:12px 12px 90px}.card{padding:14p
 <div class="wrap">
 <div class="edit">
 <div class="card"><h3>Invoice details</h3>
-<div class="g3"><div class="f"><label>Invoice number</label><input id="f_no"></div>
+<div class="g3"><div class="f"><label>Invoice number</label><input id="f_no"><div class="warn" id="nowarn" hidden></div></div>
 <div class="f s2"><label>Currency</label><select id="f_cur"></select></div></div>
 <div class="g2"><div class="f"><label>Date</label><input id="f_date" type="date"></div><div class="f"><label>Due date</label><input id="f_due" type="date"></div></div>
 <div class="g2"><div class="f"><label>Payment terms</label><input id="f_terms" list="tl" placeholder="e.g. Net 14"><datalist id="tl"><option>Due on receipt</option><option>Net 7</option><option>Net 14</option><option>Net 30</option><option>Net 60</option></datalist></div><div class="f"><label>PO number</label><input id="f_po"></div></div>
@@ -131,7 +142,7 @@ let dirty=false;
 function mig(o){if(o.biz===undefined){const[a,...r]=(o.from||'').split('\n');o.biz=a;o.from=r.join('\n')}return o}
 function blank(){const d=db.d||{};return mig({biz:d.biz,no:nextNo(),cur:d.cur||'NGN',date:today(),due:'',terms:'',po:'',from:d.from||'',email:d.email||'',taxId:d.taxId||'',billTo:'',shipTo:'',notes:'',tc:d.tc||'',bank:d.bank||'',logo:d.logo||'',items:[{d:'',q:1,r:0}],disc:0,tax:0,ship:0,paid:0,status:'draft'})}
 function calc(i){const sub=i.items.reduce((a,x)=>a+(+x.q||0)*(+x.r||0),0),dsc=sub*(+i.disc||0)/100,tx=(sub-dsc)*(+i.tax||0)/100,total=sub-dsc+tx+(+i.ship||0);return{sub,dsc,tx,total,bal:total-(+i.paid||0)}}
-function fill(){mig(cur);TK.forEach(k=>$('#f_'+k).value=cur[k]??'');NK.forEach(k=>$('#f_'+k).value=cur[k]);items();sheet()}
+function fill(){noEdited=false;mig(cur);TK.forEach(k=>$('#f_'+k).value=cur[k]??'');NK.forEach(k=>$('#f_'+k).value=cur[k]);items();sheet()}
 TK.concat(NK).forEach(k=>$('#f_'+k).addEventListener('input',e=>{cur[k]=NK.includes(k)?+e.target.value:e.target.value;
  if(k==='terms'||k==='date'){const m=/net\s*(\d+)/i.exec(cur.terms);if(m&&cur.date){const d=new Date(cur.date);d.setDate(d.getDate()+ +m[1]);cur.due=d.toISOString().slice(0,10);$('#f_due').value=cur.due}}
  sheet()}));
@@ -142,14 +153,19 @@ $('#add').onclick=()=>{cur.items.push({d:'',q:1,r:0});items();sheet()};
 $('#f_cur').addEventListener('change',items);
 $('#logo').onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{const im=new Image();im.onload=()=>{const s=Math.min(1,260/im.width),c=document.createElement('canvas');c.width=im.width*s;c.height=im.height*s;c.getContext('2d').drawImage(im,0,0,c.width,c.height);cur.logo=c.toDataURL('image/png');sheet()};im.src=r.result};r.readAsDataURL(f)};
 $('#nologo').onclick=()=>{cur.logo='';$('#logo').value='';sheet()};
-function sheet(){const i=cur;const t=calc(i),f=v=>fmt(v,i.cur);
+function sheet(){chkNo();const i=cur;const t=calc(i),f=v=>fmt(v,i.cur);
 $('#sheet').innerHTML=`<div class="in"><div class="sh-top"><div>${i.logo?`<img class="logo" src="${i.logo}" alt="">`:''}<b>${esc(i.biz||'Your business')}</b>${i.from?'<br>'+nl(i.from):''}${i.email?`<br>Email: ${esc(i.email)}`:''}${i.taxId?`<br>Tax ID: ${esc(i.taxId)}`:''}</div><div class="sh-title">invoice<small># ${esc(i.no)}</small></div></div>
 <div class="sh-mid"><div><span class="g">Bill To:</span><br>${blk(i.billTo||'Client name')}${i.shipTo?`<br><br><span class="g">Ship To:</span><br>${blk(i.shipTo)}`:''}</div>
 <div class="meta"><div class="r">Date:<b>${esc(i.date)}</b></div>${i.terms?`<div class="r">Payment Terms:<b>${esc(i.terms)}</b></div>`:''}${i.due?`<div class="r">Due Date:<b>${esc(i.due)}</b></div>`:''}${i.po?`<div class="r">PO Number:<b>${esc(i.po)}</b></div>`:''}<div class="bal"><span>Balance Due:</span><span>${f(t.bal)}</span></div></div></div>
-<table><tr><th>Item</th><th>Quantity</th><th>Rate</th><th>Amount</th></tr>${i.items.map(x=>`<tr><td>${esc(x.d)||'&nbsp;'}</td><td>${+x.q||0}</td><td>${f(+x.r||0)}</td><td>${f((+x.q||0)*(+x.r||0))}</td></tr>`).join('')}</table>
+<table><tr><th>Item</th><th>Quantity</th><th>Rate</th><th>Amount</th></tr>${i.items.map(x=>`<tr><td>${esc(x.d)||'&nbsp;'}</td><td data-l="Quantity">${+x.q||0}</td><td data-l="Rate">${f(+x.r||0)}</td><td data-l="Amount">${f((+x.q||0)*(+x.r||0))}</td></tr>`).join('')}</table>
 <div class="tot"><div><span class="g">Subtotal:</span><span>${f(t.sub)}</span></div>${+i.disc?`<div><span class="g">Discount (${+i.disc}%):</span><span>-${f(t.dsc)}</span></div>`:''}<div><span class="g">Tax (${+i.tax||0}%):</span><span>${f(t.tx)}</span></div>${+i.ship?`<div><span class="g">Shipping:</span><span>${f(+i.ship)}</span></div>`:''}<div class="b"><span>Total:</span><span>${f(t.total)}</span></div>${+i.paid?`<div><span class="g">Amount Paid:</span><span>${f(+i.paid)}</span></div>`:''}</div>
 ${i.notes?`<div class="note"><div class="g">Notes:</div>${nl(i.notes)}</div>`:''}${i.tc?`<div class="note"><div class="g">Terms:</div>${nl(i.tc)}</div>`:''}${i.bank?`<div class="note"><div class="g">Bank details:</div>${nl(i.bank)}</div>`:''}</div>`}
-async function save(){const i=cur;if(!i.no.trim()){toast('Enter an invoice number');return false}
+let noEdited=false;
+function taken(n){return db.invoices.some(x=>key(x.no)===key(n)&&x.no!==editing)}
+function chkNo(){const n=(cur.no||'').trim(),w=$('#nowarn');const bad=n&&taken(n);w.hidden=!bad;if(bad)w.innerHTML='Number '+esc(n)+' is already used. <button class="btn s" type="button" id="usenext">Use '+nextNo()+'</button>'}
+$('#nowarn').onclick=e=>{if(e.target.id==='usenext'){cur.no=nextNo();$('#f_no').value=cur.no;noEdited=false;sheet()}};
+$('#f_no').addEventListener('input',()=>noEdited=true);
+async function save(){const i=cur;if(!noEdited&&taken(i.no)){i.no=nextNo();$('#f_no').value=i.no;sheet()}if(!i.no.trim()){toast('Enter an invoice number');return false}
  if(db.invoices.some(x=>key(x.no)===key(i.no)&&x.no!==editing)){toast('Invoice '+i.no+' already exists. Use a different number.');return false}
  const c=JSON.parse(JSON.stringify(i)),old=editing;
  db.invoices=db.invoices.filter(x=>x.no!==old&&key(x.no)!==key(c.no));db.invoices.push(c);editing=c.no;
@@ -174,8 +190,6 @@ $('#list').addEventListener('click',e=>{const a=e.target.dataset.a,n=e.target.da
  if(a==='del'){if(e.target.dataset.sure){db.invoices=db.invoices.filter(y=>y.no!==n);persist();fsync();count();tracker();toast('Deleted '+n)}else{e.target.dataset.sure=1;e.target.textContent='Confirm delete'}}});
 function view(v){$('#crt').dataset.v=v;$('#se').classList.toggle('on',v==='e');$('#sp').classList.toggle('on',v==='p');scrollTo(0,0)}
 $('#se').onclick=()=>view('e');$('#sp').onclick=()=>view('p');
-function fit(){const w=$('#sw'),e=$('#sheet');if(!w.clientWidth)return;const k=Math.min(1,w.clientWidth/680);e.style.transform=k<1?`scale(${k})`:'none';w.style.height=Math.ceil(e.offsetHeight*k)+'px'}
-new ResizeObserver(fit).observe($('#sheet'));addEventListener('resize',fit);
 function show(w){if(w==='c')view('e');$('#crt').hidden=w!=='c';$('#trk').hidden=w!=='t';$('#tc').classList.toggle('on',w==='c');$('#tt').classList.toggle('on',w==='t');if(w==='t')tracker()}
 $('#tc').onclick=()=>show('c');$('#tt').onclick=()=>show('t');
 function theme(t){document.documentElement.dataset.theme=t;db.theme=t;persist();$('#th').textContent=t==='dark'?'Light':'Dark'}
